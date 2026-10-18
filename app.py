@@ -46,9 +46,9 @@ with tab1:
                 st.metric("القسم المعني بالتصنيف", prediction)
             with col_b:
                 if is_urgent:
-                    st.error("مستوى الأولوية: عالية جدا وتحتاج تدخل سريع")
+                    st.error( "مستوى الأولوية: عالية جدا ")
                 else:
-                    st.success("مستوى الأولوية: عادية")
+                    st.success("مستوى الأولوية: عادي")
         else:
             st.warning("يرجى كتابة نص الملاحظة أولا")
 
