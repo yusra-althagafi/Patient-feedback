@@ -7,7 +7,7 @@ from sklearn.pipeline import make_pipeline
 st.set_page_config(page_title="تحليل ملاحظات المرضى", layout="wide")
 
 st.title("نظام تحليل وتصنيف شكاوى وملاحظات المرضى الآلي")
-st.caption("قسم الجودة والمعلوماتية الصحية")
+st.caption("قسم المعلوماتية الصحية")
 
 @st.cache_resource
 def train_model():
