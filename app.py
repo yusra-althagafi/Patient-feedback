@@ -7,7 +7,7 @@ from sklearn.pipeline import make_pipeline
 st.set_page_config(page_title="تحليل ملاحظات المرضى", layout="wide")
 
 st.title("نظام تحليل وتصنيف شكاوى وملاحظات المرضى الآلي")
-st.caption("قسم المعلوماتية الصحية")
+st.caption("قسم الجودة والمعلوماتية الصحية")
 
 @st.cache_resource
 def train_model():
@@ -29,6 +29,18 @@ def train_model():
 
 model = train_model()
 
+# دالة تحديد مستوى الأولوية
+def get_priority(text):
+    high_keywords = ["خطأ", "إهمال", "حاد", "طوارئ", "نزيف", "عدوى", "خطيرة"]
+    medium_keywords = ["تأخرت", "انتظار", "ساعتين", "غير نظيفة", "تأخير", "جاف", "بطء"]
+    
+    if any(word in text for word in high_keywords):
+        return "عالية جداً (تدخل عاجل)", "high"
+    elif any(word in text for word in medium_keywords):
+        return "متوسطة (تستوجب المتابعة)", "medium"
+    else:
+        return "عادية (ملاحظات عامة)", "low"
+
 tab1, tab2 = st.tabs(["تحليل ملاحظة واحدة", "تحليل ملف شكاوى متعدد"])
 
 with tab1:
@@ -38,17 +50,18 @@ with tab1:
     if st.button("تحليل النص الآن"):
         if user_input.strip() != "":
             prediction = model.predict([user_input])[0]
-            urgent_keywords = ["خطأ", "تأخرت", "حاد", "إهمال", "ساعتين", "غير نظيفة"]
-            is_urgent = any(word in user_input for word in urgent_keywords)
+            priority_label, priority_level = get_priority(user_input)
             
             col_a, col_b = st.columns(2)
             with col_a:
                 st.metric("القسم المعني بالتصنيف", prediction)
             with col_b:
-                if is_urgent:
-                    st.error( "مستوى الأولوية: عالية جدا ")
+                if priority_level == "high":
+                    st.error(f"مستوى الأولوية: {priority_label}")
+                elif priority_level == "medium":
+                    st.warning(f"مستوى الأولوية: {priority_label}")
                 else:
-                    st.success("مستوى الأولوية: عادي")
+                    st.success(f"مستوى الأولوية: {priority_label}")
         else:
             st.warning("يرجى كتابة نص الملاحظة أولا")
 
@@ -62,7 +75,9 @@ with tab2:
             df_uploaded = pd.read_csv(uploaded_file)
             if "الشكوى" in df_uploaded.columns:
                 df_uploaded["القسم المقترح"] = model.predict(df_uploaded["الشكوى"])
-                st.write("النتائج بعد التصنيف الآلي:")
+                df_uploaded["مستوى الأولوية"] = df_uploaded["الشكوى"].apply(lambda x: get_priority(str(x))[0])
+                
+                st.write("النتائج بعد التصنيف الآلي واحتساب الأولوية:")
                 st.dataframe(df_uploaded, use_container_width=True)
                 
                 st.write("توزيع الشكاوى والملاحظات على الأقسام:")
